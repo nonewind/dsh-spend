@@ -51,10 +51,11 @@
 
 ## 安装
 
+**方式一：npm 直装（推荐）**
+
 ```bash
-# 1. 克隆并安装到 web profile（pnpm 转发）
-git clone https://github.com/nonewind/dsh-spend.git
-dsh plugin --profile web add -w ./dsh-spend
+# 1. 从 npm 安装到 web profile（pnpm 转发）
+dsh plugin --profile web add dsh-spend
 
 # 2. 在 ~/.dsh/profiles/web/cordis.patch.yml 中加入：
 - insert:
@@ -68,6 +69,14 @@ dsh plugin --profile web add -w ./dsh-spend
 
 # 3. 重启 dsh web（改动需要重启加载，HMR 对插件不生效）
 dsh web
+```
+
+**方式二：GitHub 源码安装**
+
+```bash
+git clone https://github.com/nonewind/dsh-spend.git
+dsh plugin --profile web add -w ./dsh-spend
+# 然后同样在 cordis.patch.yml 加入上述 insert 行并重启 dsh web
 ```
 
 ## 配置

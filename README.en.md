@@ -49,10 +49,11 @@ A built-in **provider knowledge base** (`lib/knowledge.js`, verified against off
 
 ## Installation
 
+**Option 1: install from npm (recommended)**
+
 ```bash
 # 1. Install into the web profile (forwards to pnpm)
-git clone https://github.com/nonewind/dsh-spend.git
-dsh plugin --profile web add -w ./dsh-spend
+dsh plugin --profile web add dsh-spend
 
 # 2. Add to ~/.dsh/profiles/web/cordis.patch.yml:
 - insert:
@@ -67,6 +68,14 @@ dsh plugin --profile web add -w ./dsh-spend
 
 # 3. Restart dsh web (plugin code is not hot-reloaded)
 dsh web
+```
+
+**Option 2: install from the GitHub source**
+
+```bash
+git clone https://github.com/nonewind/dsh-spend.git
+dsh plugin --profile web add -w ./dsh-spend
+# then add the same insert block above to cordis.patch.yml and restart dsh web
 ```
 
 ## Configuration
