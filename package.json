@@ -1,8 +1,7 @@
 {
   "name": "dsh-spend",
   "version": "0.1.0",
-  "description": "Token usage, multi-dimensional statistics and estimated billing for the dsh web UI",
-  "private": true,
+  "description": "Token usage, multi-dimensional statistics, auto-detected billing plans (Code/Token) and estimated spend for the dsh web UI",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -16,6 +15,33 @@
       "default": "./lib/stats.js"
     },
     "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "token",
+    "usage",
+    "tokens",
+    "billing",
+    "cost",
+    "spend",
+    "monitoring",
+    "plugin",
+    "codex",
+    "opencode"
+  ],
+  "license": "MIT",
+  "author": "ziheng <wn345361049@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nonewind/dsh-spend.git"
+  },
+  "homepage": "https://github.com/nonewind/dsh-spend#readme",
+  "bugs": {
+    "url": "https://github.com/nonewind/dsh-spend/issues"
   },
   "dsh": {
     "client": {
@@ -31,6 +57,5 @@
     "@deepseek-ai/dsh-home-paths": "^0.1.0-rc.6",
     "@deepseek-ai/dsh-typert-protocol": "^0.1.0-rc.6",
     "@deepseek-ai/schemastery": "^3.18.1"
-  },
-  "license": "MIT"
+  }
 }
