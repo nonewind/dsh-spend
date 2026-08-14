@@ -1,0 +1,9 @@
+# dependencies (local symlinks to the dsh installation — never commit)
+node_modules/
+
+# logs & OS noise
+*.log
+.DS_Store
+
+# local profile/config (contains machine-specific paths and secrets)
+*.local.yaml
