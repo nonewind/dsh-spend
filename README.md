@@ -73,33 +73,22 @@
 
 ## 安装
 
-**方式一：npm 直装（推荐）**
+插件包声明了 `dsh.bundle` 清单，`dsh plugin add` 后由 CLI 自动挂载进 profile 层——**无需手动编辑任何配置文件**：
 
 ```bash
-# 1. 从 npm 安装到 web profile（pnpm 转发）
+# 1. 安装到 web profile（pnpm 转发，支持 npm 包 / github:owner/repo / 本地路径）
 dsh plugin --profile web add dsh-spend
 
-# 2. 在 ~/.dsh/profiles/web/cordis.patch.yml 中加入：
-- insert:
-    - id: usage-stats
-      name: 'dsh-spend'
-      config:
-        currency: USD
-        # 价格表与 plans 可留空：默认按内置供应商知识库自动识别（见下方）
-        # pricing: [...]
-        # plans: [...]
+# 2. 验证已挂载（组合配置中出现 usage-stats 行）
+dsh --profile web --dump-config | grep usage-stats
 
 # 3. 重启 dsh web（改动需要重启加载，HMR 对插件不生效）
 dsh web
 ```
 
-**方式二：GitHub 源码安装**
+也可以从源码安装：`dsh plugin --profile web add github:nonewind/dsh-spend`（或本地路径 `-w /path/to/dsh-spend`）。
 
-```bash
-git clone https://github.com/nonewind/dsh-spend.git
-dsh plugin --profile web add -w ./dsh-spend
-# 然后同样在 cordis.patch.yml 加入上述 insert 行并重启 dsh web
-```
+**覆盖默认配置**：插件内置供应商知识库自动识别价格与计费计划（见上方），一般无需配置。需要覆盖时，在 `~/.dsh/profiles/web/cordis.patch.yml` 中加入同 id（`usage-stats`）的 insert 行即可——用户层在 bundle 层之后应用，同名行覆盖生效（配置项见下方「配置」章节）。
 
 ## 配置
 

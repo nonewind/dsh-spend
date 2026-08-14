@@ -73,34 +73,22 @@ Provider ids are normalized through an alias table (`glm`→zhipu, `kimi`→moon
 
 ## Installation
 
-**Option 1: install from npm (recommended)**
+The package ships a `dsh.bundle` manifest, so `dsh plugin add` mounts it as a profile layer automatically — **no manual profile editing needed**:
 
 ```bash
-# 1. Install into the web profile (forwards to pnpm)
+# 1. Install into the web profile (forwards to pnpm; accepts npm packages, github:owner/repo, or local paths)
 dsh plugin --profile web add dsh-spend
 
-# 2. Add to ~/.dsh/profiles/web/cordis.patch.yml:
-- insert:
-    - id: usage-stats
-      name: 'dsh-spend'
-      config:
-        currency: USD
-        # pricing / plans can stay empty: the built-in provider knowledge
-        # base auto-detects plans (see above)
-        # pricing: [...]
-        # plans: [...]
+# 2. Verify the row is mounted
+dsh --profile web --dump-config | grep usage-stats
 
 # 3. Restart dsh web (plugin code is not hot-reloaded)
 dsh web
 ```
 
-**Option 2: install from the GitHub source**
+To install from source: `dsh plugin --profile web add github:nonewind/dsh-spend` (or a local path with `-w`).
 
-```bash
-git clone https://github.com/nonewind/dsh-spend.git
-dsh plugin --profile web add -w ./dsh-spend
-# then add the same insert block above to cordis.patch.yml and restart dsh web
-```
+**Overriding defaults**: the plugin's built-in provider knowledge base auto-detects pricing and billing plans (see above), so no config is usually required. To override, add an `insert` row with the same id (`usage-stats`) to `~/.dsh/profiles/web/cordis.patch.yml` — the user layer applies after bundle layers and the same-id row wins (see the `config` below).
 
 ## Configuration
 

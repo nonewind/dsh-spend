@@ -1,0 +1,18 @@
+# dsh-spend bundle patch — inserts the `usage-stats` row into the profile.
+#
+# The plugin ships a built-in provider knowledge base (17 providers / 131
+# models, lib/knowledge.js): pricing and billing plans are auto-detected, so
+# no config is required. To override anything, add a row with the same id
+# (`usage-stats`) to your profile's cordis.patch.yml — the user layer is
+# applied after bundle layers and the same-id row wins.
+- insert:
+    - id: usage-stats
+      name: 'dsh-spend'
+      config:
+        currency: USD            # CNY (¥) or USD ($)
+        maxSessions: 20          # max rows in the by-session table
+        maxRecentCalls: 50       # max recent calls
+        seriesHours: 72          # time-series window in hours (zero-filled)
+        refreshSeconds: 30       # floating-window auto-refresh interval (s)
+        # pricing: [...]         # optional explicit per-model rates (overrides auto-detection)
+        # plans: [...]           # optional explicit billing plans (overrides auto-detection)
