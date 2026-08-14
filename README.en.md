@@ -26,16 +26,40 @@ Data auto-refreshes every `refreshSeconds` (default 30s; the interval is driven 
 
 ## Provider auto-detection (zero configuration)
 
-A built-in **provider knowledge base** (`lib/knowledge.js`, verified against official docs on 2026-08-14):
+A built-in **provider knowledge base** (`lib/knowledge.js`, verified against official docs on 2026-08-14) covering **17 providers / 131 model rate cards**:
 
-| Provider | Auto-detected plan | Official source |
-|---|---|---|
-| OpenCode Go (`opencode-go`) | **Code plan**: subscription $5 first month, then **$10/month**; dollar-capped usage $12 / 5h, **$30 / week**, $60 / month; DeepSeek V4 Flash ≈ **79,050 requests / week** | [opencode.ai/docs/go](https://opencode.ai/docs/go/) |
-| OpenAI Codex (`openai-codex`) | **Code plan**: ChatGPT Plus **$20/month** subscription quota (5-hour windows + weekly reviews, ≈100 requests / week) | [Codex usage limits](https://apidog.com/blog/codex-usage-limits/) |
-| DeepSeek API (`deepseek`) | **Token plan**: official rates (input $0.14 / cache hit $0.0028 / output $0.28 per million) | [api-docs.deepseek.com](https://api-docs.deepseek.com/quick_start/pricing/) |
+**Subscription (Code) plans — auto-detected with fees and quotas:**
 
-- Providers that appear in your session logs are **matched against the knowledge base automatically** (badged "auto" in the UI); an explicit `plans` config always overrides auto-detection.
+| Provider | Default tier | Tiers | Quota |
+|---|---|---|---|
+| OpenCode Go (`opencode-go`) | $10/mo | — | $30/week (~79,050 req/wk for V4 Flash) |
+| OpenAI Codex (`openai-codex`) | Plus $20/mo | Plus / Pro 5x $100 / Pro 20x $200 / Business | ~100 req/wk (reference) |
+| GitHub Copilot (`github-copilot`) | Pro $10/mo | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | AI Credits $15/mo (Pro) |
+| Claude Code (`claude-sub`) | Pro $20/mo | Pro / Max 5x $100 / Max 20x $200 | not published (5h windows, 1x/5x/20x) |
+| Google AI / Gemini CLI (`google-ai-sub`) | AI Pro $19.99/mo | AI Pro / Ultra 5x $99.99 / Ultra 20x $199.99 | 1,500 req/day (Pro) |
+
+**Pay-as-you-go (Token) plans — auto-priced with official rates:**
+
+| Provider | Models in knowledge base |
+|---|---|
+| OpenAI (`openai`) | gpt-5.6 sol/terra/luna, gpt-5.5, gpt-5.4 family, gpt-5 family, gpt-5.2, o3/o4-mini/o1 |
+| Anthropic (`anthropic`) | claude-opus-5, sonnet-5, haiku-4-5, fable-5, opus/sonnet-4.x |
+| Google (`google`) | gemini-3.7/3.6/3.5 flash, 3.1-pro, 2.5 pro/flash/lite |
+| xAI (`xai`) | grok-4.6, 4.5, 4.3, build-0.1 |
+| Mistral (`mistral`) | large-3, medium-3.5, small-4, ministral-3 |
+| Moonshot (`moonshot`) | kimi-k3, k2.7-code |
+| Zhipu (`zhipu`) | glm-5.2, 5.1, 5 |
+| Alibaba (`qwen`) | qwen3.8-max, 3.7-max/plus/flash |
+| MiniMax (`minimax`) | m3, m2.7 |
+| OpenRouter (`openrouter`) | 50 live-catalog models |
+| OpenCode Zen (`opencode-zen`) | PAYG gateway rates (Claude/GPT/Gemini/Grok/DeepSeek) |
+| DeepSeek (`deepseek`) | v4-flash, v4-pro |
+
+Provider ids are normalized through an alias table (`glm`→zhipu, `kimi`→moonshot, `dashscope`→qwen, `gemini`→google, `grok`→xai, `claude`→anthropic, `copilot`→github-copilot, …).
+
+- Providers that appear in your session logs are **matched against the knowledge base automatically** (badged "auto" in the UI); an explicit `plans` config always overrides auto-detection, and explicit `pricing` rows override knowledge-base rates.
 - **Cost model**: Code plans count their **subscription fee**, Token plans their **estimated usage**, into the "estimated monthly spend"; the raw "token estimate" stays visible for comparison.
+- Plans without a published quota (e.g. Claude Code) show the tier table instead of a progress bar; quotas are measured over the official period (day/week/month).
 
 ## How it works
 

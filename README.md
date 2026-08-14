@@ -28,16 +28,38 @@
 
 ## 供应商自动识别（无需配置）
 
-插件内置**供应商知识库**（`lib/knowledge.js`，2026-08-14 官方文档核实）：
+插件内置**供应商知识库**（`lib/knowledge.js`，2026-08-14 官方文档核实）：**17 个供应商 / 131 个模型价格**，provider id 自动归一化别名（`glm`→zhipu、`kimi`→moonshot、`dashscope`→qwen、`gemini`→google、`grok`→xai、`claude`→anthropic、`copilot`→github-copilot 等）。
 
-| 供应商 | 自动识别的计划 | 官方依据 |
-|---|---|---|
-| OpenCode Go（`opencode-go`） | **Code 计划**：订阅 $5 首月 / 之后 **$10/月**；美元额度 5h $12 / **周 $30** / 月 $60；DeepSeek V4 Flash 约 **79,050 请求/周** | [opencode.ai/docs/go](https://opencode.ai/docs/go/) |
-| OpenAI Codex（`openai-codex`） | **Code 计划**：ChatGPT Plus **$20/月** 订阅额度（5 小时窗口 + 周配额，约 100 请求/周） | [Codex usage limits](https://apidog.com/blog/codex-usage-limits/) |
-| DeepSeek API（`deepseek`） | **Token 计费**：官方价目（输入 $0.14 / 命中 $0.0028 / 输出 $0.28 每百万） | [api-docs.deepseek.com](https://api-docs.deepseek.com/quick_start/pricing/) |
+**订阅制（Code 计划）— 自动识别档位费与额度：**
 
-- 日志中出现的提供商**自动匹配**知识库生成计划（UI 标记"自动识别"）；显式 `plans` 配置始终覆盖自动识别。
+| 供应商 | 默认档 | 档位 | 额度口径 |
+|---|---|---|---|
+| OpenCode Go（`opencode-go`） | $10/月 | — | 周 $30（V4 Flash 约 79,050 请求/周） |
+| OpenAI Codex（`openai-codex`） | Plus $20/月 | Plus / Pro 5x $100 / Pro 20x $200 / Business | ~100 请求/周（参考） |
+| GitHub Copilot（`github-copilot`） | Pro $10/月 | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | AI Credits 月 $15（Pro） |
+| Claude Code（`claude-sub`） | Pro $20/月 | Pro / Max 5x $100 / Max 20x $200 | 官方未公布请求数（5h 窗口 1x/5x/20x） |
+| Google AI / Gemini CLI（`google-ai-sub`） | AI Pro $19.99/月 | AI Pro / Ultra 5x $99.99 / Ultra 20x $199.99 | 1,500 请求/天（Pro） |
+
+**按量计费（Token 计划）— 自动带官方价：**
+
+| 供应商 | 已收录模型 |
+|---|---|
+| OpenAI（`openai`） | gpt-5.6 sol/terra/luna、gpt-5.5、gpt-5.4 系、gpt-5 系、gpt-5.2、o3/o4-mini/o1 |
+| Anthropic（`anthropic`） | claude-opus-5、sonnet-5、haiku-4-5、fable-5、opus/sonnet-4.x |
+| Google（`google`） | gemini-3.7/3.6/3.5 flash、3.1-pro、2.5 pro/flash/lite |
+| xAI（`xai`） | grok-4.6、4.5、4.3、build-0.1 |
+| Mistral（`mistral`） | large-3、medium-3.5、small-4、ministral-3 |
+| Moonshot（`moonshot`） | kimi-k3、k2.7-code |
+| 智谱（`zhipu`） | glm-5.2、5.1、5 |
+| 阿里（`qwen`） | qwen3.8-max、3.7-max/plus/flash |
+| MiniMax（`minimax`） | m3、m2.7 |
+| OpenRouter（`openrouter`） | 实时目录 50 个热门模型 |
+| OpenCode Zen（`opencode-zen`） | PAYG 网关价（Claude/GPT/Gemini/Grok/DeepSeek） |
+| DeepSeek（`deepseek`） | v4-flash、v4-pro |
+
+- 日志中出现的提供商**自动匹配**知识库生成计划与价格（UI 标记"自动识别"）；显式 `plans` / `pricing` 配置始终覆盖自动识别。
 - **费用口径**：Code 计划按**订阅费**、Token 计划按**估算用量**计入「预计花费（月）」；"按 token 估算"仍单独展示，用于对比。
+- 官方未公布额度的计划（如 Claude Code）显示**档位表**而非进度条；额度按官方周期（天/周/月）计量。
 
 ## 工作原理
 
