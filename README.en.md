@@ -9,13 +9,13 @@ A **floating usage widget** pinned to the bottom-right corner of the dsh Web UI:
 ## Interactions
 
 - **Floating pill** (bottom-right): always shows estimated cost and total tokens;
-- **Hover**: summary preview (cost, tokens, input / output / cache-read, call count);
-- **Click**: expands the dashboard into four tabs:
+- **Hover**: summary preview (cost, tokens, input / output / cache-read, call count, **today's subtotal**);
+- **Click**: expands the dashboard into four tabs; a **workspace filter** dropdown on top scopes every dimension to one project (drill down into subdirectories):
 
-  - **Overview** (a dashboard in the KPI + trend style of mainstream usage panels): the **billing bar** (estimated monthly spend + composition, token estimate, total tokens, calls, sessions), **Plans** (auto-detected Code/Token plans with tiers, quota used & remaining), the 72-hour time series, **top providers / top models by cost** (6 rows each) and the 31-day trend;
+  - **Overview** (a dashboard in the KPI + trend style of mainstream usage panels): the **billing bar** (estimated monthly spend + composition, **projected month-end usage spend**, token estimate, total tokens, calls, sessions, **avg cost / call**, **cache hit rate**, optional **monthly budget** — pill turns amber at 80%, red at 100% — and **active days / day streak**), **Plans** (auto-detected Code/Token plans with tiers, quota used & remaining), the 72-hour time series, an **activity heatmap** (52 weeks, GitHub-style, cell depth = daily token volume, hover for tokens / cost / calls), **top providers / top models by cost** (6 rows each) and the 31-day trend;
   - **Today**: today's calls, tokens and cost summary plus an **hour-by-hour** token / cost chart for the current day;
   - **Performance**: per-model **time-to-first-token (TTFT) avg / P50 / P90, generation speed (tokens/s) and average latency**, plus hourly TTFT / speed curves;
-  - **Call details**: calls, tokens and cost per **session × model**, plus **by-session stats**, **recent calls** and the **rate table** — all also openable in a **separate window** that auto-refreshes with the main one.
+  - **Call details**: calls, tokens and cost per **session × model**, plus **by-working-directory stats** (sessions / models / calls / cost per project), **by-session stats**, **recent calls** (cost anomalies far above the mean are flagged with a red dot) and the **rate table** — all also openable in a **separate window** that auto-refreshes with the main one and offers **CSV / JSON / call-log CSV export**.
 
 Data auto-refreshes every `refreshSeconds` (default 30s; the interval is driven by the server config, no frontend change needed) and can be refreshed manually from the panel.
 
@@ -108,6 +108,7 @@ config:
   maxRecentCalls: 50       # max recent calls
   seriesHours: 72          # time-series window in hours (zero-filled)
   refreshSeconds: 30       # auto-refresh interval in seconds (>= 5)
+  monthlyBudget: 50        # optional monthly spend budget (same currency): used/remaining + alerts
   plans:                   # billing plans: Token Plan / Code Plan with usage & remaining
     - provider: opencode-go
       type: token          # pay-as-you-go: used cost (estimate); balance optional
@@ -136,7 +137,7 @@ Cost = Σ(bucket tokens × rate / 1e6):
 
 - DeepSeek: [official pricing](https://api-docs.deepseek.com/quick_start/pricing/) (fetched 2026-08-14). \*DeepSeek's disk cache is automatic and has **no separate cache-write line item**, hence `cacheWritePerMillion: 0`.
 - OpenAI: [official pricing](https://platform.openai.com/docs/pricing) (after the 2026-07-30 cuts); cache writes bill at 1.25× uncached input. Luna is down 80% ($1→$0.20 input / $6→$1.20 output).
-- ⚠️ **DeepSeek switches to peak/off-peak billing on 2026-08-17** (peak 01:00–04:00 / 06:00–10:00 UTC; off-peak at half price): v4-flash peak $0.014 (hit) / $0.44 (miss) / $1.32 (output); v4-pro peak $0.044 / $1.32 / $3.96. **Update the table after that date** (the plugin currently prices with a single rate, no time-of-day pricing).
+- ⚡ **DeepSeek peak/off-peak pricing is built in** (effective 2026-08-17 00:00 +08:00; peak 09:00–12:00 / 14:00–18:00 local time, off-peak at half price): v4-flash peak $0.014 (hit) / $0.44 (miss) / $1.32 (output), off-peak halved; v4-pro peak $0.044 / $1.32 / $3.96, off-peak halved. A pricing row can carry a `schedule` (`effectiveAt` + `peakHours` + `peak`/`offPeak` rates) — **each call is priced by its own timestamp**: legacy rates before 8/17, peak/off-peak after; historical calls are never re-priced (rate table rows show a "peak/off-peak" badge).
 - ⚠️ **OpenCode Go is subscription-based** (not token-billed): usage consumes the $10/month dollar quota (5h $12 / week $30 / month $60) instead of the token rates above — the "token estimate" is only a relative reference; real spend is the "estimated monthly spend" and the plan cards.
 - If your provider bills through a proxy (not the official endpoint), override the model rates to match the proxy's actual billing.
 
