@@ -12,10 +12,10 @@ A **floating usage widget** pinned to the bottom-right corner of the dsh Web UI:
 - **Hover**: summary preview (cost, tokens, input / output / cache-read, call count);
 - **Click**: expands the dashboard into four tabs:
 
-  - **Overview** (the overall billing bar): **estimated monthly spend** (subscription fees + usage-based estimates; hover to see the composition) plus the raw token estimate and per-bucket tokens / calls / sessions; **Plans** (auto-detected Code/Token plans with tiers, quota used & remaining); the 72-hour time series; by-provider / by-model / by-day / by-session tables; recent calls and the active rate table;
+  - **Overview** (a dashboard in the KPI + trend style of mainstream usage panels): the **billing bar** (estimated monthly spend + composition, token estimate, total tokens, calls, sessions), **Plans** (auto-detected Code/Token plans with tiers, quota used & remaining), the 72-hour time series, **top providers / top models by cost** (6 rows each) and the 31-day trend;
   - **Today**: today's calls, tokens and cost summary plus an **hour-by-hour** token / cost chart for the current day;
   - **Performance**: per-model **time-to-first-token (TTFT) avg / P50 / P90, generation speed (tokens/s) and average latency**, plus hourly TTFT / speed curves;
-  - **Call details**: calls, tokens and cost per **session × model**, also openable in a **separate window** that auto-refreshes with the main one.
+  - **Call details**: calls, tokens and cost per **session × model**, plus **by-session stats**, **recent calls** and the **rate table** — all also openable in a **separate window** that auto-refreshes with the main one.
 
 Data auto-refreshes every `refreshSeconds` (default 30s; the interval is driven by the server config, no frontend change needed) and can be refreshed manually from the panel.
 
