@@ -10,17 +10,12 @@ A **floating usage widget** pinned to the bottom-right corner of the dsh Web UI:
 
 - **Floating pill** (bottom-right): always shows estimated cost and total tokens;
 - **Hover**: summary preview (cost, tokens, input / output / cache-read, call count);
-- **Click**: expands the full dashboard:
+- **Click**: expands the dashboard into four tabs:
 
-  - **Summary cards**: **estimated monthly spend** (subscription fees + usage-based estimates; hover to see the composition) plus the raw token estimate and per-bucket tokens / calls / sessions;
-  - **Plans**: **auto-detected** billing plan per provider (badged "auto") — **Code Plan** (subscription: fee + periodic quota used/remaining, e.g. OpenCode Go $10/mo, OpenAI Codex $20/mo) and **Token Plan** (pay-as-you-go: used cost, optional prepaid balance and remaining); progress bar turns amber at ≥80%;
-  - **Time series**: hourly token / cost curves (hand-rolled SVG, zero dependencies; token mode draws input / output / cache-read lines, cost mode an area chart; hover shows the hour's details; 72-hour window by default, configurable);
-  - **By provider**: calls, tokens and cost share per AI provider (auto-aggregated; pricing resolves per provider);
-  - **By model**: calls, per-bucket tokens and cost share per model;
-  - **By day**: daily calls and cost (last 31 days);
-  - **By session**: top sessions by cost (working dir, calls, tokens, share);
-  - **Recent calls**: last 50 calls with time, model, session, turn/step, token details and per-call cost;
-  - **Rate table**: the currently effective per-model rates.
+  - **Overview** (the overall billing bar): **estimated monthly spend** (subscription fees + usage-based estimates; hover to see the composition) plus the raw token estimate and per-bucket tokens / calls / sessions; **Plans** (auto-detected Code/Token plans with tiers, quota used & remaining); the 72-hour time series; by-provider / by-model / by-day / by-session tables; recent calls and the active rate table;
+  - **Today**: today's calls, tokens and cost summary plus an **hour-by-hour** token / cost chart for the current day;
+  - **Performance**: per-model **time-to-first-token (TTFT) avg / P50 / P90, generation speed (tokens/s) and average latency**, plus hourly TTFT / speed curves;
+  - **Call details**: calls, tokens and cost per **session × model**, also openable in a **separate window** that auto-refreshes with the main one.
 
 Data auto-refreshes every `refreshSeconds` (default 30s; the interval is driven by the server config, no frontend change needed) and can be refreshed manually from the panel.
 
@@ -68,7 +63,8 @@ Provider ids are normalized through an alias table (`glm`→zhipu, `kimi`→moon
 - The floating widget renders through its own React root on `document.body` (`position: fixed; right: 20px; bottom: 20px`) and is removed on plugin unload.
 - Session logs under `$DSH_HOME/sessions` are replayed frame by frame (zstd) using the same semantics as the harness token-meter: `assistant/chunk` usage is an early sample, the `assistant/message` usage is the final sample for the same (turn, step) and **replaces** it, so nothing is double-counted; in-memory live-session events are merged on top.
 - Cost = Σ(bucket tokens × rate / 1e6); rates resolve **per provider**: exact (provider, model) row → generic model row → default fallback.
-- Dimensions: totals / by provider / by model / by hour (zero-filled continuous series for the charts) / by day / by session / recent calls.
+- Dimensions: totals / by provider / by model / by hour (zero-filled continuous series for the charts) / by day / by session / recent calls / performance (per-step TTFT, tokens/s and latency, aggregated per model and per hour) / session × model details.
+- Performance semantics: TTFT = request (`request/header`) → first content chunk; generation window = first → last content chunk; tokens/s = output tokens ÷ generation window. Tool-loop follow-up steps have no separate request log, so their TTFT is **estimated** from `step/start` (samples carry an `ttftEstimated` flag).
 - Snapshots are cached behind a signature of file sizes + mtimes + live event counts; unchanged data returns from cache.
 
 ## Installation
