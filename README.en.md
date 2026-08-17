@@ -19,6 +19,12 @@ A **floating usage widget** pinned to the bottom-right corner of the dsh Web UI:
 
 Data auto-refreshes every `refreshSeconds` (default 30s; the interval is driven by the server config, no frontend change needed) and can be refreshed manually from the panel.
 
+## Screenshots
+
+![Dashboard overview](docs/screenshots/dashboard.png)
+
+![Call-details window](docs/screenshots/details-window.png)
+
 ## Provider auto-detection (zero configuration)
 
 A built-in **provider knowledge base** (`lib/knowledge.js`, verified against official docs on 2026-08-14) covering **17 providers / 131 model rate cards**:

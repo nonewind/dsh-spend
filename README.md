@@ -21,6 +21,12 @@
 
 数据按 `refreshSeconds`（默认 30 秒）定时自动刷新（间隔由服务端配置下发，页面无需改动），面板内也可手动刷新。
 
+## 界面预览
+
+![仪表盘总览](docs/screenshots/dashboard.png)
+
+![调用明细窗口](docs/screenshots/details-window.png)
+
 ## 供应商自动识别（无需配置）
 
 插件内置**供应商知识库**（`lib/knowledge.js`，2026-08-14 官方文档核实）：**17 个供应商 / 131 个模型价格**，provider id 自动归一化别名（`glm`→zhipu、`kimi`→moonshot、`dashscope`→qwen、`gemini`→google、`grok`→xai、`claude`→anthropic、`copilot`→github-copilot 等）。
