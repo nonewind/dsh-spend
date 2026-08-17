@@ -12,7 +12,7 @@
         currency: USD            # CNY (¥) or USD ($)
         maxSessions: 20          # max rows in the by-session table
         maxRecentCalls: 50       # max recent calls
-        seriesHours: 72          # time-series window in hours (zero-filled)
+        seriesHours: 168         # time-series window in hours (zero-filled; UI offers 24h/72h/7d)
         refreshSeconds: 30       # floating-window auto-refresh interval (s)
         # pricing: [...]         # optional explicit per-model rates (overrides auto-detection)
         # plans: [...]           # optional explicit billing plans (overrides auto-detection)

@@ -12,7 +12,7 @@ A **floating usage widget** pinned to the bottom-right corner of the dsh Web UI:
 - **Hover**: summary preview (cost, tokens, input / output / cache-read, call count, **today's subtotal**);
 - **Click**: expands the dashboard into four tabs; a **workspace filter** dropdown on top scopes every dimension to one project (drill down into subdirectories):
 
-  - **Overview** (a dashboard in the KPI + trend style of mainstream usage panels): the **billing bar** (estimated monthly spend + composition, **projected month-end usage spend**, token estimate, total tokens, calls, sessions, **avg cost / call**, **cache hit rate**, optional **monthly budget** — pill turns amber at 80%, red at 100% — and **active days / day streak**), **Plans** (auto-detected Code/Token plans with tiers, quota used & remaining), the 72-hour time series, an **activity heatmap** (52 weeks, GitHub-style, cell depth = daily token volume, hover for tokens / cost / calls), **top providers / top models by cost** (6 rows each) and the 31-day trend;
+  - **Overview** (a dashboard in the KPI + trend style of mainstream usage panels): the **billing bar** (estimated monthly spend + composition, **projected month-end usage spend**, token estimate, total tokens, calls, sessions, **avg cost / call**, **cache hit rate**, optional **monthly budget** — pill turns amber at 80%, red at 100% — and **active days / day streak**), **Plans** (auto-detected Code/Token plans with tiers, quota used & remaining), the **time series** (24h by default, switchable to 24h / 72h / 7d; the x-axis shows dates when the day changes so repeated hours stay readable), an **activity heatmap** (52 weeks, GitHub-style, cell depth = daily token volume, hover for tokens / cost / calls), **top providers / top models by cost** (6 rows each) and the 31-day trend;
   - **Today**: today's calls, tokens and cost summary plus an **hour-by-hour** token / cost chart for the current day;
   - **Performance**: per-model **time-to-first-token (TTFT) avg / P50 / P90, generation speed (tokens/s) and average latency**, plus hourly TTFT / speed curves;
   - **Call details**: calls, tokens and cost per **session × model**, plus **by-working-directory stats** (sessions / models / calls / cost per project), **by-session stats**, **recent calls** (cost anomalies far above the mean are flagged with a red dot) and the **rate table** — all also openable in a **separate window** that auto-refreshes with the main one and offers **CSV / JSON / call-log CSV export**.
@@ -112,7 +112,7 @@ config:
     cacheWritePerMillion: 0
   maxSessions: 20          # max rows in the by-session table
   maxRecentCalls: 50       # max recent calls
-  seriesHours: 72          # time-series window in hours (zero-filled)
+  seriesHours: 168         # time-series window in hours (zero-filled; UI offers 24h/72h/7d)
   refreshSeconds: 30       # auto-refresh interval in seconds (>= 5)
   monthlyBudget: 50        # optional monthly spend budget (same currency): used/remaining + alerts
   plans:                   # billing plans: Token Plan / Code Plan with usage & remaining
