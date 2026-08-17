@@ -1,6 +1,6 @@
 {
   "name": "dsh-spend",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Token usage, multi-dimensional statistics, auto-detected billing plans (Code/Token) and estimated spend for the dsh web UI",
   "type": "module",
   "main": "lib/index.js",
