@@ -131,7 +131,7 @@ config:
 
 ### Rate sources (verified from official pages, 2026-08-14)
 
-Cost = Σ(bucket tokens × rate / 1e6):
+Cost = Σ(bucket tokens × rate / 1e6). **The table shows the pre-2026-08-17 legacy rates**; from 8/17 DeepSeek is priced automatically with the peak/off-peak schedule (see the note below — works for both `deepseek` and `deepseek-official` providers):
 
 | Model | Input (miss) | Input (cache hit) | Cache write | Output |
 |---|---|---|---|---|
