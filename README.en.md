@@ -10,10 +10,10 @@ A **floating usage widget** pinned to the bottom-right corner of the dsh Web UI:
 
 - **Floating pill** (bottom-right): always shows estimated cost and total tokens;
 - **Hover**: summary preview (cost, tokens, input / output / cache-read, call count, **today's subtotal**);
-- **Click**: expands the dashboard into four tabs; a **workspace filter** dropdown on top scopes every dimension to one project (drill down into subdirectories):
+- **Click**: expands the dashboard into four tabs; a **workspace filter** dropdown on top scopes every dimension to one project (drill down into subdirectories), and a **$ / ¥ currency switch** sits at the right end of the tab bar (same switch in the hover preview) toggling USD / CNY settlement display — the rate comes from a live quote fetched by the host (falls back to the fixed `usdCnyRate`, default 7.2):
 
-  - **Overview** (a dashboard in the KPI + trend style of mainstream usage panels): the **billing bar** (estimated monthly spend + composition, **projected month-end usage spend**, token estimate, total tokens, calls, sessions, **avg cost / call**, **cache hit rate**, optional **monthly budget** — pill turns amber at 80%, red at 100% — and **active days / day streak**), **Plans** (auto-detected Code/Token plans with tiers, quota used & remaining), the **time series** (24h by default, switchable to 24h / 72h / 7d; the x-axis starts at the first hour with usage inside the range to avoid idle gaps, and shows dates when the day changes so repeated hours stay readable), an **activity heatmap** (52 weeks, GitHub-style, cell depth = daily token volume, hover for tokens / cost / calls), **top providers / top models by cost** (6 rows each) and the 31-day trend;
-  - **Today**: today's calls, tokens and cost summary plus an **hour-by-hour** token / cost chart for the current day (the axis starts at today's first hour with usage, so idle overnight hours don't stretch the chart; a day without usage collapses to the current hour);
+  - **Overview** (pure KPI + ranking summary, no charts): the **billing bar** (estimated monthly spend + composition, **projected month-end usage spend**, token estimate, total tokens, calls, sessions, **avg cost / call**, **cache hit rate**, optional **monthly budget** — pill turns amber at 80%, red at 100% — and **active days / day streak**), **Plans** (auto-detected Code/Token plans with tiers, quota used & remaining), **top providers / top models by cost** (6 rows each) and the 31-day trend;
+  - **Today**: today's calls, tokens and cost summary plus an **hour-by-hour** token / cost chart for the current day (the axis starts at today's first hour with usage, so idle overnight hours don't stretch the chart; a day without usage collapses to the current hour), the **time series** (24h by default, switchable to 24h / 72h / 7d; the x-axis starts at the first hour with usage inside the range to avoid idle gaps, and shows dates when the day changes so repeated hours stay readable) and the **activity heatmap** (52 weeks, GitHub-style, cell depth = daily token volume, hover for tokens / cost / calls);
   - **Performance**: per-model **time-to-first-token (TTFT) avg / P50 / P90, generation speed (tokens/s) and average latency**, plus hourly TTFT / speed curves (same 24h / 72h / 7d range switch, also starting at the first hour with samples);
   - **Call details**: calls, tokens and cost per **session × model**, plus **by-working-directory stats** (sessions / models / calls / cost per project), **by-session stats**, **recent calls** (cost anomalies far above the mean are flagged with a red dot) and the **rate table** — all also openable in a **separate window** that auto-refreshes with the main one and offers **CSV / JSON / call-log CSV export**.
 
@@ -98,7 +98,8 @@ The `config` of the `usage-stats` row in `cordis.patch.yml`:
 
 ```yaml
 config:
-  currency: USD            # CNY (¥) or USD ($)
+  currency: USD            # server base currency (costs are computed in USD; the UI can switch $ / ¥ freely)
+  usdCnyRate: 7.2          # fixed USD→CNY rate (fallback when the live quote is unreachable; liveRate: true caches a real quote for 6h)
   pricing:                 # per-model rates (per million tokens)
     - model: deepseek-v4-flash
       inputPerMillion: 0.14
