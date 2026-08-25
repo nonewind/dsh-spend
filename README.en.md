@@ -33,11 +33,11 @@ A built-in **provider knowledge base** (`lib/knowledge.js`, verified against off
 
 | Provider | Default tier | Tiers | Quota |
 |---|---|---|---|
-| OpenCode Go (`opencode-go`) | $10/mo | — | $30/week (~79,050 req/wk for V4 Flash) |
-| OpenAI Codex (`openai-codex`) | Plus $20/mo | Plus / Pro 5x $100 / Pro 20x $200 / Business | ~100 req/wk (reference) |
-| GitHub Copilot (`github-copilot`) | Pro $10/mo | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | AI Credits $15/mo (Pro) |
-| Claude Code (`claude-sub`) | Pro $20/mo | Pro / Max 5x $100 / Max 20x $200 | not published (5h windows, 1x/5x/20x) |
-| Google AI / Gemini CLI (`google-ai-sub`) | AI Pro $19.99/mo | AI Pro / Ultra 5x $99.99 / Ultra 20x $199.99 | 1,500 req/day (Pro) |
+| OpenCode Go (`opencode-go`) | $10/mo | — | **Live quota** (official `GET /zen/go/v1/usage`: actual 5h/week/month percent + reset); falls back to $30/week (~79,050 req/wk for V4 Flash) when the endpoint is unreachable |
+| OpenAI Codex (`openai-codex`) | Plus $20/mo | Plus / Pro 5x $100 / Pro 20x $200 / Business | **Live quota** (`chatgpt.com/backend-api/wham/usage`; needs `~/.codex/auth.json` login on this machine; falls back to ~100 req/wk) |
+| GitHub Copilot (`github-copilot`) | Pro $10/mo | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | **Live quota** (`api.github.com/copilot_internal/user`; needs `GH_TOKEN`/`GITHUB_TOKEN` or `gh auth login`; falls back to AI Credits $15/mo) |
+| Claude Code (`claude-sub`) | Pro $20/mo | Pro / Max 5x $100 / Max 20x $200 | **Live quota** (`api.anthropic.com/api/oauth/usage`; needs `~/.claude/.credentials.json` login on this machine; falls back to the tier table) |
+| Google AI / Gemini CLI (`google-ai-sub`) | AI Pro $19.99/mo | AI Pro / Ultra 5x $99.99 / Ultra 20x $199.99 | no public usage endpoint; shows the official daily caps (1,500 / 2,000 req/day) |
 
 **Pay-as-you-go (Token) plans — auto-priced with official rates:**
 
@@ -59,6 +59,7 @@ A built-in **provider knowledge base** (`lib/knowledge.js`, verified against off
 Provider ids are normalized through an alias table (`glm`→zhipu, `kimi`→moonshot, `dashscope`→qwen, `gemini`→google, `grok`→xai, `claude`→anthropic, `copilot`→github-copilot, …).
 
 - Providers that appear in your session logs are **matched against the knowledge base automatically** (badged "auto" in the UI); an explicit `plans` config always overrides auto-detection, and explicit `pricing` rows override knowledge-base rates.
+- **Live provider quota**: built-in adapters (`lib/providers.js`) cover **OpenCode Go / OpenAI Codex / Claude Code / GitHub Copilot**; the plan card shows the **subscription vendor's own reported values** — actual percent used per window (5-hour rolling / week / month) plus the reset time, plus vendor-specific shares (Codex code review, Claude Opus/Design weekly windows, Copilot Premium/Chat snapshots) and the plan tier — instead of locally estimated caps. Credentials are reused read-only from local CLI logins (opencode-go: `OPENCODE_GO_API_KEY`; Codex: `~/.codex/auth.json`; Claude: `~/.claude/.credentials.json`; Copilot: `GH_TOKEN`/`GITHUB_TOKEN`/`gh`). Missing login or endpoint failure shows the reason and falls back to the local quota rows. These are reverse-engineered endpoints and may change; failures never crash the widget.
 - **Cost model**: Code plans count their **subscription fee**, Token plans their **estimated usage**, into the "estimated monthly spend"; the raw "token estimate" stays visible for comparison.
 - Plans without a published quota (e.g. Claude Code) show the tier table instead of a progress bar; quotas are measured over the official period (day/week/month).
 
@@ -124,7 +125,21 @@ config:
       type: code           # subscription quota: measured over the last periodDays
       quotaRequests: 100   # periodic request quota (or quotaTokens for token quota)
       periodDays: 7
+  usageEndpoints:          # live subscription-provider quota endpoints (opencode-go built in)
+    - provider: opencode-go
+      url: https://opencode.ai/zen/go/v1/usage   # official quota endpoint (undocumented API)
+      apiKeyEnv: OPENCODE_GO_API_KEY             # optional: credential name (default <PROVIDER>_API_KEY)
+      timeoutMs: 15000                           # optional: fetch timeout
 ```
+
+> Live provider quota: Code plans are read through the built-in adapters
+> (`lib/providers.js`) — opencode-go (credentials seam `OPENCODE_GO_API_KEY`),
+> openai-codex (`~/.codex/auth.json`), claude-sub (`~/.claude/.credentials.json`),
+> github-copilot (`GH_TOKEN`/`GITHUB_TOKEN`/`gh`) — showing the vendor's per-window
+> percent and reset time. `usageEndpoints` rows override the built-in URL/timeout or
+> add a custom provider via the generic Bearer-key path (`<PROVIDER>_API_KEY`). Only
+> when the login is missing or the endpoint fails (timeout, non-200) does the card
+> fall back to the local quota rows, with the reason shown.
 
 > Pricing rows accept an optional `provider` field for exact provider matching (e.g. `provider: openai-codex`); rows without one apply to any provider serving that model; unmatched models fall back to `defaultPricing`.
 > Token Plan "remaining" = configured prepaid balance − accumulated estimated cost; Code Plan "remaining" = quota − actual consumption in the period.
