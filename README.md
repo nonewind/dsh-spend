@@ -35,7 +35,7 @@
 
 | 供应商 | 默认档 | 档位 | 额度口径 |
 |---|---|---|---|
-| OpenCode Go（`opencode-go`） | $10/月 | — | 周 $30（V4 Flash 约 79,050 请求/周） |
+| OpenCode Go（`opencode-go`） | $10/月 | — | **实时额度**（官方 `GET /zen/go/v1/usage`：5h/周/月 实际已用百分比 + 重置时间）；接口不可用时回退周 $30（V4 Flash 约 79,050 请求/周） |
 | OpenAI Codex（`openai-codex`） | Plus $20/月 | Plus / Pro 5x $100 / Pro 20x $200 / Business | ~100 请求/周（参考） |
 | GitHub Copilot（`github-copilot`） | Pro $10/月 | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | AI Credits 月 $15（Pro） |
 | Claude Code（`claude-sub`） | Pro $20/月 | Pro / Max 5x $100 / Max 20x $200 | 官方未公布请求数（5h 窗口 1x/5x/20x） |
@@ -59,6 +59,7 @@
 | DeepSeek（`deepseek`） | v4-flash、v4-pro |
 
 - 日志中出现的提供商**自动匹配**知识库生成计划与价格（UI 标记"自动识别"）；显式 `plans` / `pricing` 配置始终覆盖自动识别。
+- **实时额度（订阅商直读）**：配置了 `usageEndpoints` 的订阅制提供商（内置 OpenCode Go），计划卡片直接展示**订阅商官方接口返回的额度值**——每个窗口（5小时滚动 / 周 / 月）的**实际已用百分比**与**重置时间**，不再用本地估算的上限；接口失败时卡片显示错误提示并回退本地配额行。
 - **费用口径**：Code 计划按**订阅费**、Token 计划按**估算用量**计入「预计花费（月）」；"按 token 估算"仍单独展示，用于对比。
 - 官方未公布额度的计划（如 Claude Code）显示**档位表**而非进度条；额度按官方周期（天/周/月）计量。
 
@@ -123,7 +124,16 @@ config:
       type: code           # 订阅额度制：使用量取近 periodDays 天的实际消耗
       quotaRequests: 100   # 周期请求额度（也可用 quotaTokens 按 token 额度）
       periodDays: 7
+  usageEndpoints:          # 订阅商实时额度接口（内置 opencode-go 默认值，一般无需配置）
+    - provider: opencode-go
+      url: https://opencode.ai/zen/go/v1/usage   # 官方额度端点（非公开文档 API）
+      apiKeyEnv: OPENCODE_GO_API_KEY             # 可选：凭据名（默认 <PROVIDER>_API_KEY）
+      timeoutMs: 15000                           # 可选：超时毫秒
 ```
+
+> 订阅商实时额度：配置 `usageEndpoints` 的 Code 计划，卡片优先显示 API 返回的
+> 各窗口实际百分比与重置时间（密钥经凭据缝 `ctx.credentials` / `OPENCODE_GO_API_KEY`
+> 解析）；仅当接口不可用（未配置密钥、超时、非 200）时回退本地配额行并提示原因。
 
 > 计价行可加可选 `provider` 字段做提供商精确匹配（如 `provider: openai-codex`），
 > 不带 provider 的行对任意提供商的同名模型生效；未匹配到任何行时回退 `defaultPricing`。

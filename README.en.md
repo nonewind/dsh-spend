@@ -33,7 +33,7 @@ A built-in **provider knowledge base** (`lib/knowledge.js`, verified against off
 
 | Provider | Default tier | Tiers | Quota |
 |---|---|---|---|
-| OpenCode Go (`opencode-go`) | $10/mo | — | $30/week (~79,050 req/wk for V4 Flash) |
+| OpenCode Go (`opencode-go`) | $10/mo | — | **Live quota** (official `GET /zen/go/v1/usage`: actual 5h/week/month percent + reset); falls back to $30/week (~79,050 req/wk for V4 Flash) when the endpoint is unreachable |
 | OpenAI Codex (`openai-codex`) | Plus $20/mo | Plus / Pro 5x $100 / Pro 20x $200 / Business | ~100 req/wk (reference) |
 | GitHub Copilot (`github-copilot`) | Pro $10/mo | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | AI Credits $15/mo (Pro) |
 | Claude Code (`claude-sub`) | Pro $20/mo | Pro / Max 5x $100 / Max 20x $200 | not published (5h windows, 1x/5x/20x) |
@@ -59,6 +59,7 @@ A built-in **provider knowledge base** (`lib/knowledge.js`, verified against off
 Provider ids are normalized through an alias table (`glm`→zhipu, `kimi`→moonshot, `dashscope`→qwen, `gemini`→google, `grok`→xai, `claude`→anthropic, `copilot`→github-copilot, …).
 
 - Providers that appear in your session logs are **matched against the knowledge base automatically** (badged "auto" in the UI); an explicit `plans` config always overrides auto-detection, and explicit `pricing` rows override knowledge-base rates.
+- **Live provider quota**: for Code plans with an entry in `usageEndpoints` (OpenCode Go is built in), the plan card shows the **subscription vendor's own reported values** — actual percent used per window (5-hour rolling / week / month) plus the reset time — instead of locally estimated caps. On endpoint failure the card shows the reason and falls back to the local quota rows.
 - **Cost model**: Code plans count their **subscription fee**, Token plans their **estimated usage**, into the "estimated monthly spend"; the raw "token estimate" stays visible for comparison.
 - Plans without a published quota (e.g. Claude Code) show the tier table instead of a progress bar; quotas are measured over the official period (day/week/month).
 
@@ -123,7 +124,18 @@ config:
       type: code           # subscription quota: measured over the last periodDays
       quotaRequests: 100   # periodic request quota (or quotaTokens for token quota)
       periodDays: 7
+  usageEndpoints:          # live subscription-provider quota endpoints (opencode-go built in)
+    - provider: opencode-go
+      url: https://opencode.ai/zen/go/v1/usage   # official quota endpoint (undocumented API)
+      apiKeyEnv: OPENCODE_GO_API_KEY             # optional: credential name (default <PROVIDER>_API_KEY)
+      timeoutMs: 15000                           # optional: fetch timeout
 ```
+
+> Live provider quota: for Code plans with a `usageEndpoints` entry, the card prefers the
+> official API's reported per-window percent and reset time (the API key resolves through the
+> credentials seam `ctx.credentials` / `OPENCODE_GO_API_KEY`); only when the endpoint is
+> unavailable (missing key, timeout, non-200) does the card fall back to the local quota rows,
+> with the reason shown.
 
 > Pricing rows accept an optional `provider` field for exact provider matching (e.g. `provider: openai-codex`); rows without one apply to any provider serving that model; unmatched models fall back to `defaultPricing`.
 > Token Plan "remaining" = configured prepaid balance − accumulated estimated cost; Code Plan "remaining" = quota − actual consumption in the period.
