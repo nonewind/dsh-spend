@@ -37,6 +37,9 @@ A built-in **provider knowledge base** (`lib/knowledge.js`, verified against off
 | OpenAI Codex (`openai-codex`) | Plus $20/mo | Plus / Pro 5x $100 / Pro 20x $200 / Business | **Live quota** (`chatgpt.com/backend-api/wham/usage`; needs `~/.codex/auth.json` login on this machine; falls back to ~100 req/wk) |
 | GitHub Copilot (`github-copilot`) | Pro $10/mo | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | **Live quota** (`api.github.com/copilot_internal/user`; needs `GH_TOKEN`/`GITHUB_TOKEN` or `gh auth login`; falls back to AI Credits $15/mo) |
 | Claude Code (`claude-sub`) | Pro $20/mo | Pro / Max 5x $100 / Max 20x $200 | **Live quota** (`api.anthropic.com/api/oauth/usage`; needs `~/.claude/.credentials.json` login on this machine; falls back to the tier table) |
+| ZhipuAI Coding Plan (`zhipu`) | official plan | — | **Live quota** (official `bigmodel.cn/api/monitor/usage/quota/limit`: 5h/week percent + reset, MCP monthly counts; credential seam `ZHIPU_API_KEY`; international site z.ai via a `usageEndpoints` URL override) |
+| MiniMax Token Plan (`minimax`) | official plan | — | **Live quota** (official `minimaxi.com/v1/token_plan/remains`: 5h/week remaining percent + reset; credential seam `MINIMAX_API_KEY`; international site minimax.io via a `usageEndpoints` URL override) |
+| ClinePass (`clinepass`) | official plan | — | **Live quota** (official `api.cline.bot/v1/users/me/plan/usage-limits`: 5-hour/weekly/monthly percent + reset; credential seam `CLINEPASS_API_KEY`) |
 | Google AI / Gemini CLI (`google-ai-sub`) | AI Pro $19.99/mo | AI Pro / Ultra 5x $99.99 / Ultra 20x $199.99 | no public usage endpoint; shows the official daily caps (1,500 / 2,000 req/day) |
 
 **Pay-as-you-go (Token) plans — auto-priced with official rates:**
@@ -59,7 +62,7 @@ A built-in **provider knowledge base** (`lib/knowledge.js`, verified against off
 Provider ids are normalized through an alias table (`glm`→zhipu, `kimi`→moonshot, `dashscope`→qwen, `gemini`→google, `grok`→xai, `claude`→anthropic, `copilot`→github-copilot, …).
 
 - Providers that appear in your session logs are **matched against the knowledge base automatically** (badged "auto" in the UI); an explicit `plans` config always overrides auto-detection, and explicit `pricing` rows override knowledge-base rates.
-- **Live provider quota**: built-in adapters (`lib/providers.js`) cover **OpenCode Go / OpenAI Codex / Claude Code / GitHub Copilot**; the plan card shows the **subscription vendor's own reported values** — actual percent used per window (5-hour rolling / week / month) plus the reset time, plus vendor-specific shares (Codex code review, Claude Opus/Design weekly windows, Copilot Premium/Chat snapshots) and the plan tier — instead of locally estimated caps. Credentials are reused read-only from local CLI logins (opencode-go: `OPENCODE_GO_API_KEY`; Codex: `~/.codex/auth.json`; Claude: `~/.claude/.credentials.json`; Copilot: `GH_TOKEN`/`GITHUB_TOKEN`/`gh`). Missing login or endpoint failure shows the reason and falls back to the local quota rows. These are reverse-engineered endpoints and may change; failures never crash the widget.
+- **Live provider quota & balance**: built-in adapters (`lib/providers/`) cover **OpenCode Go / OpenAI Codex / Claude Code / GitHub Copilot / ZhipuAI Coding Plan / MiniMax Token Plan / ClinePass** (quota) and **DeepSeek / Moonshot** (balance); the plan card shows the **subscription vendor's own reported values** — actual percent used per window (5-hour rolling / week / month) plus the reset time, plus vendor-specific shares (Codex code review, Claude Opus/Design weekly windows, Copilot Premium/Chat snapshots, Zhipu MCP monthly counts) and the plan tier; token-plan cards show the **real account balance** (DeepSeek/Moonshot wallets: available + top-up/granted split, converted automatically with the $/¥ switch) — instead of locally estimated caps. Credentials are reused read-only from local CLI logins and the credentials seam (opencode-go: `OPENCODE_GO_API_KEY`; DeepSeek: `DEEPSEEK_API_KEY`; Zhipu: `ZHIPU_API_KEY`; MiniMax: `MINIMAX_API_KEY`; ClinePass: `CLINEPASS_API_KEY`; Moonshot: `MOONSHOT_API_KEY`; Codex: `~/.codex/auth.json`; Claude: `~/.claude/.credentials.json`; Copilot: `GH_TOKEN`/`GITHUB_TOKEN`/`gh`). **Wallet cards appear automatically**: when the credentials seam (`$DSH_HOME/.credentials.yaml`) holds `DEEPSEEK_API_KEY` / `MOONSHOT_API_KEY`, a token-plan card is auto-created even when that provider never appears in the session logs (e.g. usage rides through a gateway), showing the real account balance. Missing login or endpoint failure shows the reason and falls back to the local quota rows. The Codex/Claude/Copilot endpoints are reverse-engineered and may change; failures never crash the widget.
 - **Cost model**: Code plans count their **subscription fee**, Token plans their **estimated usage**, into the "estimated monthly spend"; the raw "token estimate" stays visible for comparison.
 - Plans without a published quota (e.g. Claude Code) show the tier table instead of a progress bar; quotas are measured over the official period (day/week/month).
 
@@ -132,11 +135,14 @@ config:
       timeoutMs: 15000                           # optional: fetch timeout
 ```
 
-> Live provider quota: Code plans are read through the built-in adapters
-> (`lib/providers.js`) — opencode-go (credentials seam `OPENCODE_GO_API_KEY`),
+> Live provider quota & balance: Code plans are read through the built-in adapters
+> (`lib/providers/`) — opencode-go (credentials seam `OPENCODE_GO_API_KEY`),
 > openai-codex (`~/.codex/auth.json`), claude-sub (`~/.claude/.credentials.json`),
-> github-copilot (`GH_TOKEN`/`GITHUB_TOKEN`/`gh`) — showing the vendor's per-window
-> percent and reset time. `usageEndpoints` rows override the built-in URL/timeout or
+> github-copilot (`GH_TOKEN`/`GITHUB_TOKEN`/`gh`), zhipu (`ZHIPU_API_KEY`),
+> minimax (`MINIMAX_API_KEY`), clinepass (`CLINEPASS_API_KEY`) — showing the
+> vendor's per-window percent and reset time; token-plan balances come from
+> deepseek (`DEEPSEEK_API_KEY`) and moonshot (`MOONSHOT_API_KEY`). `usageEndpoints`
+> rows override the built-in URL/timeout or
 > add a custom provider via the generic Bearer-key path (`<PROVIDER>_API_KEY`). Only
 > when the login is missing or the endpoint fails (timeout, non-200) does the card
 > fall back to the local quota rows, with the reason shown.

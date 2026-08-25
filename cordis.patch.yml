@@ -18,3 +18,4 @@
         liveRate: true           # host refreshes a live USD→CNY quote (6h cache) when reachable
         # pricing: [...]         # optional explicit per-model rates (overrides auto-detection)
         # plans: [...]           # optional explicit billing plans (overrides auto-detection)
+        # usageEndpoints: [...]  # optional live quota/balance endpoint overrides (see README)

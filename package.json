@@ -1,6 +1,6 @@
 {
   "name": "dsh-spend",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Token usage, multi-dimensional statistics, auto-detected billing plans (Code/Token) and estimated spend for the dsh web UI",
   "type": "module",
   "main": "lib/index.js",
@@ -58,7 +58,7 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-credentials": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-credentials": ">=0.1.0-rc.6 <0.2.0",
     "@deepseek-ai/dsh-home-paths": "^0.1.0-rc.6",
     "@deepseek-ai/dsh-typert-protocol": "^0.1.0-rc.6",
     "@deepseek-ai/schemastery": "^3.18.1"

@@ -39,6 +39,9 @@
 | OpenAI Codex（`openai-codex`） | Plus $20/月 | Plus / Pro 5x $100 / Pro 20x $200 / Business | **实时额度**（`chatgpt.com/backend-api/wham/usage`，需本机 `~/.codex/auth.json` 登录态；未登录回退 ~100 请求/周） |
 | GitHub Copilot（`github-copilot`） | Pro $10/月 | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | **实时额度**（`api.github.com/copilot_internal/user`，需 `GH_TOKEN`/`GITHUB_TOKEN` 或 `gh auth login`；未登录回退 AI Credits 月 $15） |
 | Claude Code（`claude-sub`） | Pro $20/月 | Pro / Max 5x $100 / Max 20x $200 | **实时额度**（`api.anthropic.com/api/oauth/usage`，需本机 `~/.claude/.credentials.json` 登录态；未登录回退档位表 5h 1x/5x/20x） |
+| 智谱 Coding Plan（`zhipu`） | 官方套餐 | — | **实时额度**（官方 `bigmodel.cn/api/monitor/usage/quota/limit`：5h/周 已用百分比 + 重置时间、MCP 月度次数；凭据缝 `ZHIPU_API_KEY`；国际站 z.ai 可用 `usageEndpoints` 换 URL） |
+| MiniMax Token Plan（`minimax`） | 官方套餐 | — | **实时额度**（官方 `minimaxi.com/v1/token_plan/remains`：5h/周 剩余百分比 + 重置时间；凭据缝 `MINIMAX_API_KEY`；国际站 minimax.io 可用 `usageEndpoints` 换 URL） |
+| ClinePass（`clinepass`） | 官方套餐 | — | **实时额度**（官方 `api.cline.bot/v1/users/me/plan/usage-limits`：300 分钟/周/月 已用百分比 + 重置时间；凭据缝 `CLINEPASS_API_KEY`） |
 | Google AI / Gemini CLI（`google-ai-sub`） | AI Pro $19.99/月 | AI Pro / Ultra 5x $99.99 / Ultra 20x $199.99 | 无公开用量接口，按官方每日上限（1,500 / 2,000 请求/天）展示 |
 
 **按量计费（Token 计划）— 自动带官方价：**
@@ -59,7 +62,7 @@
 | DeepSeek（`deepseek`） | v4-flash、v4-pro |
 
 - 日志中出现的提供商**自动匹配**知识库生成计划与价格（UI 标记"自动识别"）；显式 `plans` / `pricing` 配置始终覆盖自动识别。
-- **实时额度（订阅商直读）**：内置适配器（`lib/providers.js`）覆盖 **OpenCode Go / OpenAI Codex / Claude Code / GitHub Copilot**，计划卡片直接展示**订阅商接口返回的额度值**——每个窗口（5小时滚动 / 周 / 月）的**实际已用百分比**与**重置时间**，另附供应商特有额度（Codex 代码评审、Claude Opus/Design 周窗口、Copilot Premium/Chat 快照）与档位信息，不再用本地估算的上限。凭据**只读**复用本机 CLI 登录态：opencode-go 用凭据缝 `OPENCODE_GO_API_KEY`，Codex 读 `~/.codex/auth.json`，Claude 读 `~/.claude/.credentials.json`，Copilot 读 `GH_TOKEN`/`GITHUB_TOKEN`/`gh` 配置；登录态缺失或接口失败时卡片显示原因并回退本地配额行。是非公开/逆向接口，随时可能变化，失败不崩溃。
+- **实时额度 / 余额（厂商直读）**：内置适配器（`lib/providers/`）——额度类 **OpenCode Go / OpenAI Codex / Claude Code / GitHub Copilot / 智谱 Coding Plan / MiniMax Token Plan / ClinePass**，余额类 **DeepSeek / Moonshot**。Code 计划卡片直接展示**订阅商接口返回的额度值**（每个窗口 5h/周/月的**实际已用百分比**与**重置时间**，另附供应商特有额度：Codex 代码评审、Claude Opus/Design 周窗口、Copilot Premium/Chat 快照、智谱 MCP 月度次数）；Token 计划卡片展示**真实账户余额**（DeepSeek/Moonshot 钱包：可用余额 + 充值/赠金拆分，随 $/¥ 切换自动换算），不再用本地估算的上限。凭据**只读**复用本机登录态与凭据缝：`OPENCODE_GO_API_KEY` / `DEEPSEEK_API_KEY` / `ZHIPU_API_KEY` / `MINIMAX_API_KEY` / `CLINEPASS_API_KEY` / `MOONSHOT_API_KEY`，Codex 读 `~/.codex/auth.json`，Claude 读 `~/.claude/.credentials.json`，Copilot 读 `GH_TOKEN`/`GITHUB_TOKEN`/`gh` 配置；**余额卡自动出现**：只要凭据缝（`$DSH_HOME/.credentials.yaml`）配置了 `DEEPSEEK_API_KEY` / `MOONSHOT_API_KEY`，即使该 provider 未出现在会话日志中（例如经 OpenCode Go 网关使用），也会自动生成 token 计划卡展示真实账户余额；登录态缺失或接口失败时卡片显示原因并回退本地配额行。Codex/Claude/Copilot 为非公开/逆向接口，随时可能变化，失败不崩溃。
 - **费用口径**：Code 计划按**订阅费**、Token 计划按**估算用量**计入「预计花费（月）」；"按 token 估算"仍单独展示，用于对比。
 - 官方未公布额度的计划（如 Claude Code）显示**档位表**而非进度条；额度按官方周期（天/周/月）计量。
 
@@ -132,11 +135,14 @@ config:
       timeoutMs: 15000                           # 可选：超时毫秒
 ```
 
-> 订阅商实时额度：Code 计划按内置适配器（`lib/providers.js`）直读订阅商接口——
+> 订阅商实时额度/余额：Code 计划按内置适配器（`lib/providers/`）直读订阅商接口——
 > **opencode-go**（凭据缝 `OPENCODE_GO_API_KEY`）、**openai-codex**（本机
 > `~/.codex/auth.json`）、**claude-sub**（`~/.claude/.credentials.json`）、
-> **github-copilot**（`GH_TOKEN`/`GITHUB_TOKEN`/`gh` 配置）；卡片显示各窗口
-> 实际百分比与重置时间。`usageEndpoints` 可覆盖内置地址/超时或为自定义供应商
+> **github-copilot**（`GH_TOKEN`/`GITHUB_TOKEN`/`gh` 配置）、**zhipu**
+> （`ZHIPU_API_KEY`）、**minimax**（`MINIMAX_API_KEY`）、**clinepass**
+> （`CLINEPASS_API_KEY`）；卡片显示各窗口实际百分比与重置时间。Token 计划
+> 余额直读：**deepseek**（`DEEPSEEK_API_KEY`）、**moonshot**
+> （`MOONSHOT_API_KEY`）。`usageEndpoints` 可覆盖内置地址/超时或为自定义供应商
 > 走通用 Bearer-key 通道（`<PROVIDER>_API_KEY`）。仅当登录态缺失、超时或非 200
 > 时回退本地配额行并提示原因。
 
