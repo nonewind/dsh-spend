@@ -36,10 +36,10 @@
 | 供应商 | 默认档 | 档位 | 额度口径 |
 |---|---|---|---|
 | OpenCode Go（`opencode-go`） | $10/月 | — | **实时额度**（官方 `GET /zen/go/v1/usage`：5h/周/月 实际已用百分比 + 重置时间）；接口不可用时回退周 $30（V4 Flash 约 79,050 请求/周） |
-| OpenAI Codex（`openai-codex`） | Plus $20/月 | Plus / Pro 5x $100 / Pro 20x $200 / Business | ~100 请求/周（参考） |
-| GitHub Copilot（`github-copilot`） | Pro $10/月 | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | AI Credits 月 $15（Pro） |
-| Claude Code（`claude-sub`） | Pro $20/月 | Pro / Max 5x $100 / Max 20x $200 | 官方未公布请求数（5h 窗口 1x/5x/20x） |
-| Google AI / Gemini CLI（`google-ai-sub`） | AI Pro $19.99/月 | AI Pro / Ultra 5x $99.99 / Ultra 20x $199.99 | 1,500 请求/天（Pro） |
+| OpenAI Codex（`openai-codex`） | Plus $20/月 | Plus / Pro 5x $100 / Pro 20x $200 / Business | **实时额度**（`chatgpt.com/backend-api/wham/usage`，需本机 `~/.codex/auth.json` 登录态；未登录回退 ~100 请求/周） |
+| GitHub Copilot（`github-copilot`） | Pro $10/月 | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | **实时额度**（`api.github.com/copilot_internal/user`，需 `GH_TOKEN`/`GITHUB_TOKEN` 或 `gh auth login`；未登录回退 AI Credits 月 $15） |
+| Claude Code（`claude-sub`） | Pro $20/月 | Pro / Max 5x $100 / Max 20x $200 | **实时额度**（`api.anthropic.com/api/oauth/usage`，需本机 `~/.claude/.credentials.json` 登录态；未登录回退档位表 5h 1x/5x/20x） |
+| Google AI / Gemini CLI（`google-ai-sub`） | AI Pro $19.99/月 | AI Pro / Ultra 5x $99.99 / Ultra 20x $199.99 | 无公开用量接口，按官方每日上限（1,500 / 2,000 请求/天）展示 |
 
 **按量计费（Token 计划）— 自动带官方价：**
 
@@ -59,7 +59,7 @@
 | DeepSeek（`deepseek`） | v4-flash、v4-pro |
 
 - 日志中出现的提供商**自动匹配**知识库生成计划与价格（UI 标记"自动识别"）；显式 `plans` / `pricing` 配置始终覆盖自动识别。
-- **实时额度（订阅商直读）**：配置了 `usageEndpoints` 的订阅制提供商（内置 OpenCode Go），计划卡片直接展示**订阅商官方接口返回的额度值**——每个窗口（5小时滚动 / 周 / 月）的**实际已用百分比**与**重置时间**，不再用本地估算的上限；接口失败时卡片显示错误提示并回退本地配额行。
+- **实时额度（订阅商直读）**：内置适配器（`lib/providers.js`）覆盖 **OpenCode Go / OpenAI Codex / Claude Code / GitHub Copilot**，计划卡片直接展示**订阅商接口返回的额度值**——每个窗口（5小时滚动 / 周 / 月）的**实际已用百分比**与**重置时间**，另附供应商特有额度（Codex 代码评审、Claude Opus/Design 周窗口、Copilot Premium/Chat 快照）与档位信息，不再用本地估算的上限。凭据**只读**复用本机 CLI 登录态：opencode-go 用凭据缝 `OPENCODE_GO_API_KEY`，Codex 读 `~/.codex/auth.json`，Claude 读 `~/.claude/.credentials.json`，Copilot 读 `GH_TOKEN`/`GITHUB_TOKEN`/`gh` 配置；登录态缺失或接口失败时卡片显示原因并回退本地配额行。是非公开/逆向接口，随时可能变化，失败不崩溃。
 - **费用口径**：Code 计划按**订阅费**、Token 计划按**估算用量**计入「预计花费（月）」；"按 token 估算"仍单独展示，用于对比。
 - 官方未公布额度的计划（如 Claude Code）显示**档位表**而非进度条；额度按官方周期（天/周/月）计量。
 
@@ -125,16 +125,20 @@ config:
       type: code           # 订阅额度制：使用量取近 periodDays 天的实际消耗
       quotaRequests: 100   # 周期请求额度（也可用 quotaTokens 按 token 额度）
       periodDays: 7
-  usageEndpoints:          # 订阅商实时额度接口（内置 opencode-go 默认值，一般无需配置）
+  usageEndpoints:          # 订阅商实时额度接口（内置 opencode-go 默认值；其余内置适配器见注释）
     - provider: opencode-go
       url: https://opencode.ai/zen/go/v1/usage   # 官方额度端点（非公开文档 API）
       apiKeyEnv: OPENCODE_GO_API_KEY             # 可选：凭据名（默认 <PROVIDER>_API_KEY）
       timeoutMs: 15000                           # 可选：超时毫秒
 ```
 
-> 订阅商实时额度：配置 `usageEndpoints` 的 Code 计划，卡片优先显示 API 返回的
-> 各窗口实际百分比与重置时间（密钥经凭据缝 `ctx.credentials` / `OPENCODE_GO_API_KEY`
-> 解析）；仅当接口不可用（未配置密钥、超时、非 200）时回退本地配额行并提示原因。
+> 订阅商实时额度：Code 计划按内置适配器（`lib/providers.js`）直读订阅商接口——
+> **opencode-go**（凭据缝 `OPENCODE_GO_API_KEY`）、**openai-codex**（本机
+> `~/.codex/auth.json`）、**claude-sub**（`~/.claude/.credentials.json`）、
+> **github-copilot**（`GH_TOKEN`/`GITHUB_TOKEN`/`gh` 配置）；卡片显示各窗口
+> 实际百分比与重置时间。`usageEndpoints` 可覆盖内置地址/超时或为自定义供应商
+> 走通用 Bearer-key 通道（`<PROVIDER>_API_KEY`）。仅当登录态缺失、超时或非 200
+> 时回退本地配额行并提示原因。
 
 > 计价行可加可选 `provider` 字段做提供商精确匹配（如 `provider: openai-codex`），
 > 不带 provider 的行对任意提供商的同名模型生效；未匹配到任何行时回退 `defaultPricing`。
