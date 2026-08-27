@@ -72,3 +72,14 @@ test("non-alias providers keep their exact match behavior", () => {
   assert.equal(stats.plans[0].provider, "opencode-go");
   assert.equal(stats.plans[0].usedRequests, 2);
 });
+
+test("minimax-cn alias usage lands on the minimax code plan windows", () => {
+  const stats = buildStats([sample("minimax-cn"), sample("minimax-cn")], [], {}, {
+    plans: [{ provider: "minimax", type: "code", quota: { requestsPerWeek: 100 } }],
+  });
+  assert.equal(stats.plans.length, 1);
+  assert.equal(stats.plans[0].provider, "minimax");
+  assert.equal(stats.plans[0].type, "code");
+  assert.equal(stats.plans[0].usedRequests, 2);
+  assert.equal(stats.plans[0].remainingRequests, 98);
+});

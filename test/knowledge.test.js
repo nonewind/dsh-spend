@@ -51,3 +51,22 @@ test("discoverPlans: subscription plans carry canonical id + discovery record", 
   assert.equal(autoPlans[0].subscription.amount, 10);
   assert.equal(autoDiscovered[0].provider, "github-copilot");
 });
+
+test("CN-region provider ids normalize to their canonical plan providers", () => {
+  assert.equal(normalizeProvider("minimax-cn"), "minimax");
+  assert.equal(normalizeProvider("zhipu-cn"), "zhipu");
+});
+
+test("discoverPlans: minimax-cn logs yield one MiniMax CODE plan (live quota, not balance)", () => {
+  const { autoPlans, autoDiscovered } = discoverPlans(["minimax-cn"]);
+  assert.equal(autoPlans.length, 1);
+  assert.equal(autoPlans[0].provider, "minimax");
+  assert.equal(autoPlans[0].type, "code", "MiniMax Token Plan has a live usage adapter, not a balance adapter");
+  assert.equal(autoPlans[0].label, "MiniMax");
+  assert.equal(autoDiscovered[0].provider, "minimax");
+});
+
+test("discoverPlans: minimax-cn is deduped against an explicit minimax plan", () => {
+  const { autoPlans } = discoverPlans(["minimax-cn", "minimax"], [{ provider: "minimax", type: "code" }]);
+  assert.equal(autoPlans.length, 0);
+});

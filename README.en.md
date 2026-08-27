@@ -60,7 +60,7 @@ A **floating usage widget** pinned to the bottom-right corner of the dsh Web UI:
 
 ## Provider auto-detection (zero configuration)
 
-The plugin ships a built-in **provider knowledge base** (`lib/knowledge.js`, verified against official docs on 2026-08-14) covering **17 providers / 131 model rate cards**. Provider ids are normalized through an alias table (`glm`→zhipu, `kimi`→moonshot, `dashscope`→qwen, `gemini`→google, `grok`→xai, `claude`→anthropic, `copilot`→github-copilot, …). Providers that appear in your session logs are **matched automatically** (badged "auto" in the UI); an explicit `plans` / `pricing` config always overrides auto-detection.
+The plugin ships a built-in **provider knowledge base** (`lib/knowledge.js`, verified against official docs on 2026-08-14) covering **17 providers / 131 model rate cards**. Provider ids are normalized through an alias table (`glm`→zhipu, `kimi`→moonshot, `dashscope`→qwen, `gemini`→google, `grok`→xai, `claude`→anthropic, `copilot`→github-copilot, `minimax-cn`→minimax, `deepseek-official`→deepseek, …). Providers that appear in your session logs are **matched automatically** (badged "auto" in the UI); an explicit `plans` / `pricing` config always overrides auto-detection.
 
 ### Subscription (Code) plans — auto-detected with fees and quotas
 
@@ -71,7 +71,7 @@ The plugin ships a built-in **provider knowledge base** (`lib/knowledge.js`, ver
 | GitHub Copilot (`github-copilot`) | Pro $10/mo | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | **Live quota** (`api.github.com/copilot_internal/user`; needs `GH_TOKEN`/`GITHUB_TOKEN` or `gh auth login`; falls back to AI Credits $15/mo) |
 | Claude Code (`claude-sub`) | Pro $20/mo | Pro / Max 5x $100 / Max 20x $200 | **Live quota** (`api.anthropic.com/api/oauth/usage`; needs `~/.claude/.credentials.json` login on this machine; falls back to the tier table) |
 | ZhipuAI Coding Plan (`zhipu`) | official plan | — | **Live quota** (official `bigmodel.cn/api/monitor/usage/quota/limit`: 5h/week percent + reset, MCP monthly counts; credential seam `ZHIPU_API_KEY`; international site z.ai via a `usageEndpoints` URL override) |
-| MiniMax Token Plan (`minimax`) | official plan | — | **Live quota** (official `minimaxi.com/v1/token_plan/remains`: 5h/week remaining percent + reset; credential seam `MINIMAX_API_KEY`; international site minimax.io via a `usageEndpoints` URL override) |
+| MiniMax Token Plan (`minimax`) | official plan | — | **Live quota** (official `minimaxi.com/v1/token_plan/remains`: 5h/week remaining percent + reset; credential seam `MINIMAX_API_KEY`, fallback `MINIMAX_CN_API_KEY`; international site minimax.io via a `usageEndpoints` URL override) |
 | ClinePass (`clinepass`) | official plan | — | **Live quota** (official `api.cline.bot/v1/users/me/plan/usage-limits`: 5h/weekly/monthly percent + reset; credential seam `CLINEPASS_API_KEY`) |
 | Google AI / Gemini CLI (`google-ai-sub`) | AI Pro $19.99/mo | AI Pro / Ultra 5x $99.99 / Ultra 20x $199.99 | no public usage endpoint; shows the official daily caps (1,500 / 2,000 req/day) |
 
@@ -103,7 +103,7 @@ Credentials are reused read-only from local CLI logins and the credentials seam:
 
 | Provider | Credential source |
 |---|---|
-| OpenCode Go / DeepSeek / Zhipu / MiniMax / ClinePass / Moonshot | env or credentials seam: `OPENCODE_GO_API_KEY` / `DEEPSEEK_API_KEY` / `ZHIPU_API_KEY` / `MINIMAX_API_KEY` / `CLINEPASS_API_KEY` / `MOONSHOT_API_KEY` |
+| OpenCode Go / DeepSeek / Zhipu / MiniMax / ClinePass / Moonshot | env or credentials seam: `OPENCODE_GO_API_KEY` / `DEEPSEEK_API_KEY` / `ZHIPU_API_KEY` / `MINIMAX_API_KEY` (fallback `MINIMAX_CN_API_KEY`) / `CLINEPASS_API_KEY` / `MOONSHOT_API_KEY` |
 | OpenAI Codex | local `~/.codex/auth.json` login |
 | Claude Code | local `~/.claude/.credentials.json` login |
 | GitHub Copilot | `GH_TOKEN` / `GITHUB_TOKEN` / `gh` config |
@@ -182,7 +182,7 @@ config:
       timeoutMs: 15000                           # optional: fetch timeout
 ```
 
-> **Live provider quota & balance**: Code plans are read through the built-in adapters (`lib/providers/`) — opencode-go (credentials seam `OPENCODE_GO_API_KEY`), openai-codex (`~/.codex/auth.json`), claude-sub (`~/.claude/.credentials.json`), github-copilot (`GH_TOKEN`/`GITHUB_TOKEN`/`gh`), zhipu (`ZHIPU_API_KEY`), minimax (`MINIMAX_API_KEY`), clinepass (`CLINEPASS_API_KEY`) — showing the vendor's per-window percent and reset time; token-plan balances come from deepseek (`DEEPSEEK_API_KEY`) and moonshot (`MOONSHOT_API_KEY`). `usageEndpoints` rows override the built-in URL/timeout or add a custom provider via the generic Bearer-key path (`<PROVIDER>_API_KEY`). Only when the login is missing or the endpoint fails (timeout, non-200) does the card fall back to the local quota rows, with the reason shown.
+> **Live provider quota & balance**: Code plans are read through the built-in adapters (`lib/providers/`) — opencode-go (credentials seam `OPENCODE_GO_API_KEY`), openai-codex (`~/.codex/auth.json`), claude-sub (`~/.claude/.credentials.json`), github-copilot (`GH_TOKEN`/`GITHUB_TOKEN`/`gh`), zhipu (`ZHIPU_API_KEY`), minimax (`MINIMAX_API_KEY`, fallback `MINIMAX_CN_API_KEY`), clinepass (`CLINEPASS_API_KEY`) — showing the vendor's per-window percent and reset time; token-plan balances come from deepseek (`DEEPSEEK_API_KEY`) and moonshot (`MOONSHOT_API_KEY`). `usageEndpoints` rows override the built-in URL/timeout or add a custom provider via the generic Bearer-key path (`<PROVIDER>_API_KEY`). Only when the login is missing or the endpoint fails (timeout, non-200) does the card fall back to the local quota rows, with the reason shown.
 
 > **Pricing rows** accept an optional `provider` field for exact provider matching (e.g. `provider: openai-codex`); rows without one apply to any provider serving that model; unmatched models fall back to `defaultPricing`. Token Plan "remaining" = configured prepaid balance − accumulated estimated cost; Code Plan "remaining" = quota − actual consumption in the period. Providers without a `plans` entry show no plan card (their cost is still shown in the by-provider table).
 

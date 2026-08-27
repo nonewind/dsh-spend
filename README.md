@@ -62,7 +62,7 @@
 
 ## 供应商自动识别（零配置）
 
-插件内置**供应商知识库**（`lib/knowledge.js`，2026-08-14 官方文档核实）：**17 个供应商 / 131 个模型价格**。provider id 自动归一化别名：`glm`→zhipu、`kimi`→moonshot、`dashscope`→qwen、`gemini`→google、`grok`→xai、`claude`→anthropic、`copilot`→github-copilot 等。日志中出现的提供商**自动匹配**知识库生成计划与价格（UI 标记"自动识别"）；显式 `plans` / `pricing` 配置始终覆盖自动识别。
+插件内置**供应商知识库**（`lib/knowledge.js`，2026-08-14 官方文档核实）：**17 个供应商 / 131 个模型价格**。provider id 自动归一化别名：`glm`→zhipu、`kimi`→moonshot、`dashscope`→qwen、`gemini`→google、`grok`→xai、`claude`→anthropic、`copilot`→github-copilot、`minimax-cn`→minimax、`deepseek-official`→deepseek 等。日志中出现的提供商**自动匹配**知识库生成计划与价格（UI 标记"自动识别"）；显式 `plans` / `pricing` 配置始终覆盖自动识别。
 
 ### 订阅制（Code 计划）— 自动识别档位费与额度
 
@@ -73,7 +73,7 @@
 | GitHub Copilot（`github-copilot`） | Pro $10/月 | Free / Pro / Pro+ $39 / Max $100 / Business / Enterprise | **实时额度**（`api.github.com/copilot_internal/user`，需 `GH_TOKEN`/`GITHUB_TOKEN` 或 `gh auth login`；未登录回退 AI Credits 月 $15） |
 | Claude Code（`claude-sub`） | Pro $20/月 | Pro / Max 5x $100 / Max 20x $200 | **实时额度**（`api.anthropic.com/api/oauth/usage`，需本机 `~/.claude/.credentials.json` 登录态；未登录回退档位表 5h 1x/5x/20x） |
 | 智谱 Coding Plan（`zhipu`） | 官方套餐 | — | **实时额度**（官方 `bigmodel.cn/api/monitor/usage/quota/limit`：5h/周 已用百分比 + 重置时间、MCP 月度次数；凭据缝 `ZHIPU_API_KEY`；国际站 z.ai 可用 `usageEndpoints` 换 URL） |
-| MiniMax Token Plan（`minimax`） | 官方套餐 | — | **实时额度**（官方 `minimaxi.com/v1/token_plan/remains`：5h/周 剩余百分比 + 重置时间；凭据缝 `MINIMAX_API_KEY`；国际站 minimax.io 可用 `usageEndpoints` 换 URL） |
+| MiniMax Token Plan（`minimax`） | 官方套餐 | — | **实时额度**（官方 `minimaxi.com/v1/token_plan/remains`：5h/周 剩余百分比 + 重置时间；凭据缝 `MINIMAX_API_KEY`，兜底 `MINIMAX_CN_API_KEY`；国际站 minimax.io 可用 `usageEndpoints` 换 URL） |
 | ClinePass（`clinepass`） | 官方套餐 | — | **实时额度**（官方 `api.cline.bot/v1/users/me/plan/usage-limits`：300 分钟/周/月 已用百分比 + 重置时间；凭据缝 `CLINEPASS_API_KEY`） |
 | Google AI / Gemini CLI（`google-ai-sub`） | AI Pro $19.99/月 | AI Pro / Ultra 5x $99.99 / Ultra 20x $199.99 | 无公开用量接口，按官方每日上限（1,500 / 2,000 请求/天）展示 |
 
@@ -105,7 +105,7 @@
 
 | 供应商 | 凭据来源 |
 |---|---|
-| OpenCode Go / DeepSeek / 智谱 / MiniMax / ClinePass / Moonshot | 环境变量或凭据缝：`OPENCODE_GO_API_KEY` / `DEEPSEEK_API_KEY` / `ZHIPU_API_KEY` / `MINIMAX_API_KEY` / `CLINEPASS_API_KEY` / `MOONSHOT_API_KEY` |
+| OpenCode Go / DeepSeek / 智谱 / MiniMax / ClinePass / Moonshot | 环境变量或凭据缝：`OPENCODE_GO_API_KEY` / `DEEPSEEK_API_KEY` / `ZHIPU_API_KEY` / `MINIMAX_API_KEY`（兜底 `MINIMAX_CN_API_KEY`） / `CLINEPASS_API_KEY` / `MOONSHOT_API_KEY` |
 | OpenAI Codex | 本机 `~/.codex/auth.json` 登录态 |
 | Claude Code | 本机 `~/.claude/.credentials.json` 登录态 |
 | GitHub Copilot | `GH_TOKEN` / `GITHUB_TOKEN` / `gh` 配置 |
@@ -184,7 +184,7 @@ config:
       timeoutMs: 15000                           # 可选：超时毫秒
 ```
 
-> **实时额度/余额**：Code 计划按内置适配器（`lib/providers/`）直读订阅商接口——opencode-go（凭据缝 `OPENCODE_GO_API_KEY`）、openai-codex（本机 `~/.codex/auth.json`）、claude-sub（`~/.claude/.credentials.json`）、github-copilot（`GH_TOKEN`/`GITHUB_TOKEN`/`gh` 配置）、zhipu（`ZHIPU_API_KEY`）、minimax（`MINIMAX_API_KEY`）、clinepass（`CLINEPASS_API_KEY`）；卡片显示各窗口实际百分比与重置时间。Token 计划余额直读：deepseek（`DEEPSEEK_API_KEY`）、moonshot（`MOONSHOT_API_KEY`）。`usageEndpoints` 可覆盖内置地址/超时，或为自定义供应商走通用 Bearer-key 通道（`<PROVIDER>_API_KEY`）。仅当登录态缺失、超时或非 200 时回退本地配额行并提示原因。
+> **实时额度/余额**：Code 计划按内置适配器（`lib/providers/`）直读订阅商接口——opencode-go（凭据缝 `OPENCODE_GO_API_KEY`）、openai-codex（本机 `~/.codex/auth.json`）、claude-sub（`~/.claude/.credentials.json`）、github-copilot（`GH_TOKEN`/`GITHUB_TOKEN`/`gh` 配置）、zhipu（`ZHIPU_API_KEY`）、minimax（`MINIMAX_API_KEY`，兜底 `MINIMAX_CN_API_KEY`）、clinepass（`CLINEPASS_API_KEY`）；卡片显示各窗口实际百分比与重置时间。Token 计划余额直读：deepseek（`DEEPSEEK_API_KEY`）、moonshot（`MOONSHOT_API_KEY`）。`usageEndpoints` 可覆盖内置地址/超时，或为自定义供应商走通用 Bearer-key 通道（`<PROVIDER>_API_KEY`）。仅当登录态缺失、超时或非 200 时回退本地配额行并提示原因。
 
 > **计价行**可加可选 `provider` 字段做提供商精确匹配（如 `provider: openai-codex`），不带 provider 的行对任意提供商的同名模型生效；未匹配到任何行时回退 `defaultPricing`。Token Plan 的「剩余」= 配置的充值余额 − 累计已用费用；Code Plan 的「剩余」= 额度 − 周期内实际消耗。未配置 `plans` 的提供商不显示计划卡片（默认按 token 计费口径展示费用）。
 
