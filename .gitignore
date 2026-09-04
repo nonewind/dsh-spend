@@ -1,4 +1,5 @@
 # dependencies (local symlinks to the dsh installation — never commit)
+node_modules
 node_modules/
 
 # logs & OS noise
