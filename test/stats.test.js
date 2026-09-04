@@ -133,6 +133,24 @@ test("scanSessions streams zstd frames and reuses unchanged durable files", asyn
     assert.equal(updated.decodeErrors, 0);
     assert.equal(updated.calls.length, 1);
     assert.equal(updated.calls[0].outputTokens, 3);
+
+    // A live session already owns the complete event snapshot. Its durable
+    // file may still be mid-write, so the scanner must not decode it again.
+    await writeFile(file, Buffer.from("incomplete zstd frame"));
+    const live = await scanSessions(root, [{
+      id: "s1",
+      events: [
+        { type: "session", id: "s1", cwd: "/workspace", createdAt: now },
+        { type: "request/header", data: { header: { config: { provider: "deepseek", model: "deepseek-v4" } } } },
+        { type: "step/start", data: { turn: 0, step: 0 } },
+        { type: "assistant/message", data: { turn: 0, step: 0, usage: { outputTokens: 4 } } },
+      ],
+      header: { cwd: "/workspace", createdAt: now },
+    }], fileCache);
+    assert.equal(live.totalSessions, 1);
+    assert.equal(live.decodeErrors, 0);
+    assert.equal(live.calls.length, 1);
+    assert.equal(live.calls[0].outputTokens, 4);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
