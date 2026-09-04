@@ -5,7 +5,11 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildStats } from "../lib/stats.js";
+import { mkdtemp, mkdir, rm, utimes, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { zstdCompressSync } from "node:zlib";
+import { buildStats, scanSessions } from "../lib/stats.js";
 
 const now = Date.now();
 const Flash = {
@@ -82,4 +86,54 @@ test("minimax-cn alias usage lands on the minimax code plan windows", () => {
   assert.equal(stats.plans[0].type, "code");
   assert.equal(stats.plans[0].usedRequests, 2);
   assert.equal(stats.plans[0].remainingRequests, 98);
+});
+
+test("scanSessions streams zstd frames and reuses unchanged durable files", async () => {
+  const root = await mkdtemp(join(tmpdir(), "dsh-spend-stats-"));
+  const sessionDir = join(root, "workspace", "s1");
+  const file = join(sessionDir, "session.jsonl.zstd");
+  const now = Date.now();
+  const writeSession = async (outputTokens) => {
+    const frames = [
+      [
+        { type: "session", id: "s1", cwd: "/workspace", createdAt: now },
+        { type: "request/header", data: { header: { config: { provider: "deepseek", model: "deepseek-v4" } } } },
+        { type: "step/start", data: { turn: 0, step: 0 } },
+      ],
+      [
+        { type: "assistant/chunk", data: { turn: 0, step: 0, chunk: { type: "usage", usage: { outputTokens: outputTokens - 1 } } } },
+        { type: "assistant/message", data: { turn: 0, step: 0, usage: { outputTokens } } },
+      ],
+    ];
+    await writeFile(
+      file,
+      Buffer.concat(frames.map((events) => zstdCompressSync(Buffer.from(`${events.map((event) => JSON.stringify(event)).join("\n")}\n`)))),
+    );
+  };
+
+  try {
+    await mkdir(sessionDir, { recursive: true });
+    await writeSession(2);
+    const fileCache = new Map();
+    const first = await scanSessions(root, [], fileCache);
+    assert.equal(first.totalSessions, 1);
+    assert.equal(first.decodeErrors, 0);
+    assert.equal(first.calls.length, 1);
+    assert.equal(first.calls[0].outputTokens, 2);
+
+    const reused = await scanSessions(root, [], fileCache);
+    assert.deepEqual(reused.calls, first.calls);
+    assert.equal(fileCache.size, 1);
+
+    await writeSession(3);
+    const changedAt = new Date(Date.now() + 2000);
+    await utimes(file, changedAt, changedAt);
+    const updated = await scanSessions(root, [], fileCache);
+    assert.equal(updated.totalSessions, 1);
+    assert.equal(updated.decodeErrors, 0);
+    assert.equal(updated.calls.length, 1);
+    assert.equal(updated.calls[0].outputTokens, 3);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
